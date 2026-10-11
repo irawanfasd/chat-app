@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Threat Map - LmsMoodleTest</title>
+<link rel="stylesheet" href="lib/leaflet.css" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0e14;color:#e9edef;overflow-x:hidden}
+header{background:linear-gradient(135deg,#1a1f2e,#0f1419);padding:16px 20px;border-bottom:1px solid #2a3942;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{font-size:1.3rem;color:#00d9a3;display:flex;align-items:center;gap:10px}
+header h1::before{content:'🛡️';font-size:1.5rem}
+.live-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#00d9a3;animation:pulse 1.5s infinite;margin-left:8px}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #00d9a3}50%{opacity:.5;box-shadow:0 0 0 8px rgba(0,217,163,0)}}
+.back-link{color:#00d9a3;text-decoration:none;padding:8px 14px;border:1px solid #00d9a3;border-radius:8px;font-size:.85rem;transition:all .2s}
+.back-link:hover{background:#00d9a3;color:#0a0e14}
+.dashboard{padding:16px;max-width:1400px;margin:0 auto}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.card{background:#131820;border:1px solid #1f2c33;border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.3);margin-bottom:16px}
+.card h2{font-size:1rem;color:#00d9a3;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.stat-box{background:linear-gradient(135deg,#1a1f2e,#0f1419);border:1px solid #1f2c33;border-radius:10px;padding:14px;text-align:center}
+.stat-value{font-size:1.8rem;font-weight:700;color:#00d9a3;line-height:1.2}
+.stat-label{font-size:.75rem;color:#8696a0;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+#map{width:100%;height:450px;background:#1a1f2e;border-radius:8px}
+.leaflet-container{background:#1a1f2e!important}
+.feed{max-height:500px;overflow-y:auto}
+.attack-item{padding:10px 12px;border-left:3px solid #00d9a3;background:#0f1419;border-radius:6px;margin-bottom:8px;font-size:.85rem;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.attack-item.login_failed{border-left-color:#ff4757}
+.attack-item.login_success{border-left-color:#ffa502}
+.attack-item.command{border-left-color:#00d9a3}
+.attack-item.connect{border-left-color:#3742fa}
+.attack-item.disconnect{border-left-color:#8696a0}
+.attack-time{color:#8696a0;font-size:.7rem;margin-bottom:4px}
+.attack-ip{color:#53bdeb;font-weight:600;font-family:'Courier New',monospace}
+.attack-detail{color:#e9edef;margin-top:2px;word-break:break-all}
+.attack-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;text-transform:uppercase;margin-right:6px}
+.badge-failed{background:rgba(255,71,87,.2);color:#ff4757}
+.badge-success{background:rgba(255,165,2,.2);color:#ffa502}
+.badge-command{background:rgba(0,217,163,.2);color:#00d9a3}
+.badge-connect{background:rgba(55,66,250,.2);color:#3742fa}
+.tops{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.top-list{list-style:none}
+.top-list li{display:flex;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #1f2c33;font-size:.85rem}
+.top-list li:last-child{border-bottom:none}
+.top-list .label{color:#e9edef;font-family:'Courier New',monospace;word-break:break-all;margin-right:10px}
+.top-list .count{color:#00d9a3;font-weight:700;flex-shrink:0}
+.empty{text-align:center;color:#8696a0;padding:20px;font-style:italic;font-size:.85rem}
+.feed::-webkit-scrollbar{width:6px}
+.feed::-webkit-scrollbar-track{background:#0a0e14}
+.feed::-webkit-scrollbar-thumb{background:#2a3942;border-radius:3px}
+.custom-pulse-marker{background:#ff4757;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 0 rgba(255,71,87,.7);animation:markerPulse 2s infinite}
+@keyframes markerPulse{0%{box-shadow:0 0 0 0 rgba(255,71,87,.7)}70%{box-shadow:0 0 0 20px rgba(255,71,87,0)}100%{box-shadow:0 0 0 0 rgba(255,71,87,0)}}
+.leaflet-popup-content-wrapper{border-radius:8px}
+</style>
+</head>
+<body>
+<header>
+<h1>Threat Map <span class="live-dot"></span></h1>
+<a href="/chat/" class="back-link">← Kembali ke Chat</a>
+</header>
+
+<div class="dashboard">
+<div class="stats-grid">
+<div class="stat-box"><div class="stat-value" id="totalAttacks">0</div><div class="stat-label">Total Serangan</div></div>
+<div class="stat-box"><div class="stat-value" id="uniqueIPs">0</div><div class="stat-label">IP Unik</div></div>
+<div class="stat-box"><div class="stat-value" id="loginAttempts">0</div><div class="stat-label">Percobaan Login</div></div>
+<div class="stat-box"><div class="stat-value" id="sessionTime">0m</div><div class="stat-label">Durasi Monitoring</div></div>
+</div>
+
+<div class="card">
+<h2>🗺️ Attack Map</h2>
+<div id="map"></div>
+</div>
+
+<div class="card">
+<h2>📡 Live Attack Feed</h2>
+<div class="feed" id="feed"><div class="empty">Menunggu serangan masuk...</div></div>
+</div>
+
+<div class="tops">
+<div class="card"><h2>👤 Top Username</h2><ul class="top-list" id="topUsernames"><li><span class="label">-</span><span class="count">0</span></li></ul></div>
+<div class="card"><h2>🔑 Top Password</h2><ul class="top-list" id="topPasswords"><li><span class="label">-</span><span class="count">0</span></li></ul></div>
+<div class="card"><h2>⌨️ Top Command</h2><ul class="top-list" id="topCommands"><li><span class="label">-</span><span class="count">0</span></li></ul></div>
+</div>
+
+<div class="card" id="country-stats-panel">
+  <h2>🌍 Top 5 Negara Penyerang</h2>
+  <div id="countryStats"><p class="empty">Belum ada data</p></div>
+</div>
+
+<div class="card" id="filter-panel">
+  <h2>🔍 Filter Negara</h2>
+  <select id="countryFilter" style="width:100%;padding:8px;background:#1a1f2e;color:#e9edef;border:1px solid #2a3942;border-radius:6px;font-size:0.9rem;">
+    <option value="all">🌐 Semua Negara</option>
+  </select>
+  <div style="margin-top:10px;display:flex;gap:8px;">
+    <button id="toggleLines" style="flex:1;padding:8px;background:#00d9a3;color:#0a0e14;border:none;border-radius:6px;font-weight:600;cursor:pointer;">📏 Garis: ON</button>
+    <button id="toggleHeatmap" style="flex:1;padding:8px;background:#ffa502;color:#0a0e14;border:none;border-radius:6px;font-weight:600;cursor:pointer;">🔥 Heatmap: OFF</button>
+  </div>
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js" data-cfasync="false"></script>
+<script src="lib/leaflet.js" data-cfasync="false"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js" data-cfasync="false"></script>
+<script src="threat-map.js" data-cfasync="false"></script>
+</body>
+</html>

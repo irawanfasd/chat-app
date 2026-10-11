@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Chat - LmsMoodleTest</title>
+  <link rel="stylesheet" href="style.css?v=11">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>💬 Chat</h3>
+        <span id="online-count" class="badge">0</span>
+        <button id="create-room-btn" class="icon-btn" title="Buat Room">+</button>
+      </div>
+      <div class="tabs">
+	<button id="theme-toggle" class="theme-toggle" title="Ganti Tema">🌙</button>
+        <button id="tab-online" class="tab active">👥 Online</button>
+        <button id="tab-rooms" class="tab">🚪 Rooms</button>
+      </div>
+      <div id="online-users" class="online-list"></div>
+      <div id="rooms-list" class="online-list hidden"></div>
+    </aside>
+
+    <div class="container">
+      <header>
+        <button id="sidebar-toggle" class="sidebar-toggle">☰</button>
+        <div class="header-left">
+          <div class="avatar-header">💬</div>
+          <div>
+            <h1 id="chat-title">Chat Room</h1>
+            <span id="status">Menghubungkan...</span>
+          </div>
+        </div>
+        <button id="call-btn" class="call-btn hidden">📹</button>
+        <button id="back-btn" class="back-btn hidden">← Kembali</button>
+      </header>
+      <div id="messages"></div>
+      <form id="form">
+        <label for="file-input" class="attach-btn">📎</label>
+        <input type="file" id="file-input" accept="image/*" hidden />
+        <input id="input" autocomplete="off" placeholder="Ketik pesan..." disabled />
+        <button type="submit" disabled>➤</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal">
+    <div class="modal-content">
+      <h2>Masuk Chat</h2>
+      <p>Masukkan nama kamu untuk mulai chat</p>
+      <input id="username-input" placeholder="Nama kamu..." maxlength="20" />
+      <button id="join-btn">Masuk</button>
+    </div>
+  </div>
+
+  <!-- Image Preview -->
+  <div id="image-preview" class="image-preview hidden">
+    <img id="preview-img" />
+    <button id="cancel-image">✕</button>
+  </div>
+
+  <!-- Buat Room Modal -->
+  <div id="room-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Buat Room Baru</h2>
+      <p>Room akan dilindungi PIN</p>
+      <input id="room-name" placeholder="Nama room..." maxlength="30" />
+      <input id="room-pin" placeholder="PIN (4-6 digit)" maxlength="6" type="text" />
+      <label class="checkbox-label">
+        <input type="checkbox" id="room-private" checked />
+        <span>Private (butuh PIN untuk join)</span>
+      </label>
+      <button id="create-room-submit">Buat Room</button>
+      <button id="room-cancel" class="btn-secondary">Batal</button>
+    </div>
+  </div>
+
+  <!-- Join Room Modal -->
+  <div id="join-room-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Masuk Room</h2>
+      <p id="join-room-name"></p>
+      <input id="join-room-pin" placeholder="Masukkan PIN" maxlength="6" type="text" />
+      <button id="join-room-submit">Masuk</button>
+      <button id="join-cancel" class="btn-secondary">Batal</button>
+    </div>
+  </div>
+
+  <!-- Incoming Call Modal -->
+  <div id="incoming-call-modal" class="modal hidden">
+    <div class="modal-content call-content">
+      <div class="call-avatar">📞</div>
+      <h2 id="incoming-caller-name">User</h2>
+      <p>Sedang memanggil kamu...</p>
+      <div class="call-actions">
+        <button id="reject-call-btn" class="call-btn-reject">❌ Tolak</button>
+        <button id="accept-call-btn" class="call-btn-accept">✅ Terima</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Call Modal -->
+  <div id="call-modal" class="modal hidden">
+    <div class="call-container">
+      <video id="remote-video" autoplay playsinline></video>
+      <video id="local-video" autoplay muted playsinline></video>
+      <div class="call-info" id="call-info">Menghubungkan...</div>
+      <div class="call-controls">
+        <button id="mute-btn" class="call-control">🎤</button>
+        <button id="toggle-video-btn" class="call-control">📹</button>
+        <button id="end-call-btn" class="call-control call-end">📞</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js?v=4"></script>
+  <script src="script.js?v=7"></script>
+  <script src="webrtc.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebRTC Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #111; color: white; }
+    video { width: 300px; border: 2px solid #00a884; border-radius: 8px; margin: 10px; }
+    button { padding: 10px 20px; background: #00a884; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; font-size: 16px; }
+    #log { background: #222; padding: 10px; border-radius: 8px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>WebRTC Test</h1>
+  <button id="startBtn">Mulai Kamera</button>
+  <button id="stopBtn">Stop</button>
+  <div id="log"></div>
+  <video id="localVideo" autoplay muted playsinline></video>
+
+  <script>
+    const log = (msg) => {
+      document.getElementById('log').innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+      console.log(msg);
+    };
+
+    document.getElementById('startBtn').onclick = async () => {
+      try {
+        log('Minta akses kamera...');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('localVideo').srcObject = stream;
+        log('✅ Kamera OK!');
+        log('Video: ' + stream.getVideoTracks()[0].label);
+        log('Audio: ' + stream.getAudioTracks()[0].label);
+      } catch (err) {
+        log('❌ Error: ' + err.message);
+      }
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+      const video = document.getElementById('localVideo');
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+        log('Kamera dimatikan');
+      }
+    };
+  </script>
+</body>
+</html>
